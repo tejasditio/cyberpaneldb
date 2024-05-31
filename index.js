@@ -25,19 +25,27 @@ app.post("/api/admin/create-email-address", (req, res) => {
   const mail = `maildir:/home/vmail/team.ditiosys.com/${
     email.split("@")[0]
   }/Maildir`;
+  const emailOwner_id = "team.ditiosys.com";
 
-  cyberdb.query(
-    "INSERT INTO e_users (email, password, mail, DiskUsage, emailOwner_id) VALUES (?, ?, ?, 0, team.ditiosys.com)",
-    [email, password, mail],
-    (err, result) => {
-      if (err) {
-        console.log(err);
-        res.json({ message: "Internal Error", error: err.message });
-      } else {
-        res.json({ message: "successfully created" });
-      }
+  bcrypt.hash(password, saltRounds, (err, hash) => {
+    if (err) {
+      console.error(err);
+    } else {
+      const hashedPassword = `{CRYPT}${hash}`;
+      cyberdb.query(
+        "INSERT INTO e_users (email, password, mail, DiskUsage, emailOwner_id) VALUES (?, ?, ?, 0, ?)",
+        [email, hashedPassword, mail, emailOwner_id],
+        (err, result) => {
+          if (err) {
+            console.log(err);
+            res.json({ message: "Internal Error", error: err.message });
+          } else {
+            res.json({ message: "successfully created" });
+          }
+        }
+      );
     }
-  );
+  });
 });
 
 app.get("/", (req, res) => {
