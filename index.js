@@ -19,6 +19,27 @@ const cyberdb = mysql.createConnection({
   database: "cyberpanel",
 });
 
+app.post("/api/admin/create-email-address", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const mail = `maildir:/home/vmail/team.ditiosys.com/${
+    email.split("@")[0]
+  }/Maildir`;
+
+  cyberdb.query(
+    "INSERT INTO e_users (email, password, mail, DiskUsage, emailOwner_id) VALUES (?, ?, ?, 0, team.ditiosys.com)",
+    [email, password, mail],
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.json({ message: "Internal Error", error: err.message });
+      } else {
+        res.json({ message: "successfully created" });
+      }
+    }
+  );
+});
+
 app.get("/", (req, res) => {
   console.log("Hello world");
   cyberdb.query("SELECT * FROM e_users", (err, rows) => {
