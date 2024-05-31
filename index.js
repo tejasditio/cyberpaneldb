@@ -48,6 +48,51 @@ app.post("/api/admin/create-email-address", (req, res) => {
   });
 });
 
+app.post("/api/users/update-email-password", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  cyberdb.query(
+    "SELECT * FROM e_users WHERE email = ?",
+    [email],
+    (err, rows) => {
+      if (err) {
+        console.log(err);
+        res.json({ message: "Internal Error", error: err.message });
+      } else if (rows.length == 0) {
+        res.json({ message: "No users found" });
+      } else {
+        bcrypt.hash(password, saltRounds, (err3, hash) => {
+          if (err3) {
+            console.log(err);
+            res.json({
+              message: "Internal Error : Bcrypt",
+              error: err.message,
+            });
+          } else {
+            hashedPassword = `{CRYPT}${hash}`;
+            cyberdb.query(
+              "UPDATE e_users SET password = ? WHERE email = ?",
+              [hashedPassword, email],
+              (err2, result2) => {
+                if (err2) {
+                  console.log(err2);
+                  res.json({
+                    message: "Internal Error: Update",
+                    error: err.message,
+                  });
+                } else {
+                  res.json({ message: "Password updated successfully" });
+                }
+              }
+            );
+          }
+        });
+      }
+    }
+  );
+});
+
 app.get("/", (req, res) => {
   console.log("Hello world");
   cyberdb.query("SELECT * FROM e_users", (err, rows) => {
